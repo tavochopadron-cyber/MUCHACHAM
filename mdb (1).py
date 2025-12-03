@@ -8,7 +8,6 @@ Original file is located at
 """
 
 # -*- coding: utf-8 -*-
-"""Versión completa con MongoDB + correcciones de Sí/No"""
 
 import base64
 import secrets
@@ -18,30 +17,44 @@ from pymongo import MongoClient
 # ================================
 # 🔵  CONEXIÓN A MONGODB
 # ================================
-# ⚠️ REEMPLAZA TU CADENA DE MONGODB AQUÍ
 MONGO_URI = "mongodb+srv://tavo_user:1234567#@cluster0.cjx2xfb.mongodb.net/?appName=Cluster0"
 client = MongoClient(MONGO_URI)
-db = client["bricos_db"]
+db = client["muchacham_db"]
 coleccion = db["candidatos"]
 
 # ================================
-# 🔵  PARÁMETROS
+#  PARÁMETROS
 # ================================
 NUM_PREGUNTAS_TECNICAS = 12
 NUM_PREGUNTAS_BLANDAS = 13
-PUNTAJE_MINIMO_BLANDAS = 0.45
+PUNTAJE_MINIMO_BLANDAS = 0.60
 
 # ================================
-# 🔵  CLASE RSA SIMULADA
+# CIFRADO RSA (BASE 64)
 # ================================
-class RSAKeySimulada:
-    def __init__(self):
-        self.public_key = base64.b64encode(secrets.token_bytes(32)).decode("utf-8")
-        self.private_key = base64.b64encode(secrets.token_bytes(32)).decode("utf-8")
+from cryptography.hazmat.primitives.asymmetric 
+import rsa, padding
+from cryptography.hazmat.primitives
+import serialization, hashes
 
-def cifrar_rsa_simulado(datos, clave_publica):
-    datos_codificados = base64.urlsafe_b64encode(datos.encode("utf-8")).decode("utf-8")
-    return f"RSA-256:{clave_publica[:16]}...{datos_codificados[:40]}..."
+private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+public_key = private_key.public_key()
+
+public_pem = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+)
+
+def cifrar_rsa_real(datos, public_key):
+    encrypted = public_key.encrypt(
+        datos.encode("utf-8"),
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return base64.b64encode(encrypted).decode("utf-8")
 
 # ================================
 # 🔵  PREGUNTAS TÉCNICAS
@@ -78,7 +91,7 @@ PREGUNTAS_BLANDAS = [
 ]
 
 # ================================
-# 🔵  ÁREAS
+#   ÁREAS
 # ================================
 AREAS = {
     "CARGADOR":         [0, 3, 4, 7, 8],
@@ -99,7 +112,7 @@ def asignar_area(respuestas):
     return max(conteo, key=conteo.get)
 
 # ================================
-# 🔵  SELECCIÓN DE ÁREA DESEADA
+#  SELECCIÓN DE ÁREA DESEADA
 # ================================
 def seleccionar_area_deseada():
     opciones = {
@@ -121,7 +134,7 @@ def seleccionar_area_deseada():
         print("Opción no válida.")
 
 # ================================
-# 🔵  DATOS PERSONALES
+#   DATOS PERSONALES
 # ================================
 def pedir_datos_personales():
     def pedir(m):
@@ -141,7 +154,7 @@ def pedir_datos_personales():
     }
 
 # ================================
-# 🔵  CUESTIONARIOS (Sí / No corregido)
+#   CUESTIONARIO (si/no)
 # ================================
 def realizar_cuestionario(preguntas, tipo):
     puntaje = 0
@@ -160,7 +173,7 @@ def realizar_cuestionario(preguntas, tipo):
     return puntaje, respuestas
 
 # ================================
-# 🔵  EVALUACIÓN
+#  EVALUACIÓN
 # ================================
 def evaluar(pt_tecnico, pt_blando):
     return (
@@ -170,11 +183,11 @@ def evaluar(pt_tecnico, pt_blando):
     )
 
 # ================================
-# 🔵  PROCESO PRINCIPAL
+#   PROCESO PRINCIPAL
 # ================================
 def iniciar_proceso_seleccion():
     print("\n========================================")
-    print("    🌟 SISTEMA DE SELECCIÓN MUCHACHAM 🌟")
+    print(" SISTEMA DE SELECCIÓN MUCHACHAM ")
     print("========================================")
 
     datos = pedir_datos_personales()
@@ -193,7 +206,7 @@ def iniciar_proceso_seleccion():
     area_recomendada = asignar_area(resp_tecnicas)
 
     # =============================
-    # 🔴 GUARDAR EN MONGODB
+    # GUARDAR EN MONGODB
     # =============================
     registro = {
         "nombre": datos["nombre"],
@@ -218,7 +231,7 @@ def iniciar_proceso_seleccion():
     print(f"Puesto deseado:     {area_deseada}")
     print(f"Área recomendada:   {area_recomendada}")
     print(f"Técnicas: {pct_tec:.2f}% | Blandas: {pct_bla:.2f}%")
-    print("Estado:", "ACEPTADO ✅" if aceptado else "NO ACEPTADO ❌")
+    print("Estado:", "ACEPTADO " if aceptado else "NO ACEPTADO ")
     print("========================================")
 
 # Ejecutar
